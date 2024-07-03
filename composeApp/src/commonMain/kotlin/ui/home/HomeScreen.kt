@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -25,6 +26,7 @@ import androidx.compose.ui.text.intl.Locale
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import data.network.Response
+import kotlinx.coroutines.flow.collectLatest
 import org.jetbrains.compose.resources.painterResource
 import org.koin.compose.viewmodel.koinViewModel
 import org.koin.core.annotation.KoinExperimentalAPI
@@ -44,11 +46,33 @@ fun HomeScreen(
     val data = viewModel.combineFlow.collectAsStateWithLifecycle()
     val showLoading = remember { mutableStateOf(false) }
 
+    val state = rememberLazyGridState()
+
+    LaunchedEffect(state.canScrollForward) {
+        if (!state.canScrollForward)
+            viewModel.loadMoreData().collectLatest {
+                when (it) {
+                    is Response.Loading -> {
+                        showLoading.value = true
+                    }
+
+                    is Response.Error -> {
+                        showLoading.value = false
+                    }
+
+                    is Response.Success -> {
+                        showLoading.value = false
+                        viewModel.addData(it.data ?: emptyList())
+                    }
+                }
+            }
+    }
+
+
     LaunchedEffect(Unit) {
-        viewModel.pokemonFlow.collect {
+        viewModel.pokemonFlow.collectLatest {
             when (it) {
                 is Response.Loading -> {
-                    println("loading")
                     showLoading.value = true
                 }
 
@@ -58,7 +82,7 @@ fun HomeScreen(
 
                 is Response.Success -> {
                     showLoading.value = false
-                    viewModel.updateData(it.data ?: emptyList())
+                    if (data.value.isEmpty()) viewModel.updateData(it.data ?: emptyList())
                 }
             }
         }
@@ -71,6 +95,7 @@ fun HomeScreen(
         Box(modifier = Modifier.fillMaxSize().padding(it)) {
             LazyVerticalGrid(
                 columns = GridCells.Adaptive(150.dp),
+                state = state,
                 verticalArrangement = Arrangement.spacedBy(10.dp),
                 horizontalArrangement = Arrangement.spacedBy(10.dp),
                 modifier = Modifier.padding(10.dp)

@@ -2,7 +2,7 @@ package ui.detail
 
 import androidx.lifecycle.ViewModel
 import data.network.Response
-import data.network.repository.PokemonRepositoryImpl
+import data.network.repository.PokemonRepository
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -12,7 +12,7 @@ import ui.model.OtherUiModel
 import ui.model.PokemonDetailUiModel
 import ui.model.SpritesUiModel
 
-class DetailViewModel(private val repositoryImpl: PokemonRepositoryImpl) : ViewModel() {
+class DetailViewModel(private val repositoryImpl: PokemonRepository) : ViewModel() {
     private val _detail = MutableStateFlow<PokemonDetailUiModel?>(null)
     val detail = _detail.asStateFlow()
 

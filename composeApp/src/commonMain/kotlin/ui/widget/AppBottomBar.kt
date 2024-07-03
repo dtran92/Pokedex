@@ -28,11 +28,11 @@ fun AppBottomBar(navController: NavController) {
                     navController.navigate(item.route) {
                         navController.graph.findStartDestination().route?.let {
                             popUpTo(it) {
-                                saveState = true
+                                saveState = false
                             }
                         }
                         launchSingleTop = true
-                        restoreState = true
+                        restoreState = false
                     }
                 },
                 icon = {

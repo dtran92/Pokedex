@@ -1,5 +1,6 @@
 package ui.favourite
 
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -21,7 +22,7 @@ fun FavouriteScreen(viewModel: FavouriteViewModel = koinViewModel(), bottomBar: 
         topBar = { AppTopBar(title = "Favourite") },
         bottomBar = bottomBar
     ) {
-        LazyColumn(modifier = Modifier.padding(it)) {
+        LazyColumn(modifier = Modifier.fillMaxSize().padding(it)) {
             items(items = data.value, key = { elem -> elem.name }) { item ->
                 Text(text = item.name)
             }

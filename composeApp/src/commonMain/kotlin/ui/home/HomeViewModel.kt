@@ -5,7 +5,7 @@ import androidx.lifecycle.viewModelScope
 import data.local.dao.PokemonDao
 import data.local.model.PokemonEntity
 import data.network.Response
-import data.network.repository.PokemonRepositoryImpl
+import data.network.repository.PokemonRepository
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.IO
 import kotlinx.coroutines.flow.*
@@ -13,7 +13,7 @@ import kotlinx.coroutines.launch
 import ui.model.PokemonUiModel
 
 class HomeViewModel(
-    private val repository: PokemonRepositoryImpl,
+    private val repository: PokemonRepository,
     private val pokemonDao: PokemonDao
 ) : ViewModel() {
 
@@ -36,11 +36,11 @@ class HomeViewModel(
                 data = it.data?.map { elem -> PokemonUiModel(elem.name, elem.url) }
             )
         }
-    }.flowOn(Dispatchers.IO)
+    }
 
     val combineFlow = combine(_dataList, _localList) { dataList, localList ->
         dataList.map { elem -> if (elem in localList) elem.copy(isFavourite = true) else elem }
-    }.flowOn(Dispatchers.IO).stateIn(viewModelScope, SharingStarted.WhileSubscribed(), emptyList())
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(), emptyList())
 
 
     fun updateData(newData: List<PokemonUiModel>) {
@@ -48,7 +48,6 @@ class HomeViewModel(
     }
 
     fun addToFavourite(item: PokemonUiModel) {
-        println("add")
         viewModelScope.launch(Dispatchers.IO) {
             pokemonDao.addPokemon(PokemonEntity(name = item.name, url = item.url))
             _localList.update {
@@ -58,7 +57,6 @@ class HomeViewModel(
     }
 
     fun removeFromFavourite(item: PokemonUiModel) {
-        println("remove")
         viewModelScope.launch(Dispatchers.IO) {
             pokemonDao.deletePokemon(PokemonEntity(name = item.name, url = item.url))
             _localList.update {
@@ -67,6 +65,22 @@ class HomeViewModel(
         }
     }
 
+    fun loadMoreData(): Flow<Response<List<PokemonUiModel>?>> {
+        return repository.fetchPokemon(offset = _dataList.value.size + 20).map {
+            when (it) {
+                is Response.Loading -> Response.Loading()
+                is Response.Error -> Response.Error(error = it.error)
+                is Response.Success -> Response.Success(
+                    data = it.data?.map { elem -> PokemonUiModel(elem.name, elem.url) }
+                )
+            }
+        }
+    }
 
+    fun addData(newData: List<PokemonUiModel>) {
+        _dataList.update {
+            it.toMutableList().apply { addAll(newData) }
+        }
+    }
 }
 

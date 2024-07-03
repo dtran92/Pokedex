@@ -3,6 +3,7 @@ package di
 import androidx.room.RoomDatabase
 import androidx.sqlite.driver.bundled.BundledSQLiteDriver
 import data.local.Database
+import data.network.repository.PokemonRepository
 import data.network.repository.PokemonRepositoryImpl
 import io.github.aakira.napier.DebugAntilog
 import io.github.aakira.napier.Napier
@@ -38,7 +39,7 @@ val networkModule = module {
             }
         }.also { Napier.base(DebugAntilog()) }
     }
-    single {
+    single<PokemonRepository> {
         PokemonRepositoryImpl(get())
     }
 
